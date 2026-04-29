@@ -37,6 +37,11 @@ export interface Exercise extends ExerciseDefaults {
   muscleGroup: MuscleGroup;
 }
 
+export interface ExerciseDraft extends ExerciseDefaults {
+  name: string;
+  muscleGroup: MuscleGroup;
+}
+
 export interface WorkoutPlan {
   id: EntityId;
   name: string;
@@ -85,6 +90,7 @@ export interface TimerState extends DurationWindow {
 }
 
 export interface UserWorkoutData {
+  exercises: Exercise[];
   workoutPlans: WorkoutPlan[];
   weeklySchedule: WeeklySchedule[];
   workoutLogs: WorkoutLog[];

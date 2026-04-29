@@ -3,6 +3,7 @@ import { Pressable, StyleSheet, Text, View } from 'react-native';
 import { ScreenShell } from '@/components/layout/screen-shell';
 import { BrutalCard } from '@/components/ui/brutal-card';
 import { SectionTitle } from '@/components/ui/section-title';
+import { ExerciseManager } from '@/features/exercises/components/exercise-manager';
 import { firebaseConfig, isFirebaseConfigured } from '@/services/firebase';
 import { useAppStore } from '@/store/use-app-store';
 import { palette } from '@/utils/theme';
@@ -36,6 +37,8 @@ export default function SettingsScreen() {
           Project ID: {firebaseConfig.projectId ?? 'missing'}
         </Text>
       </BrutalCard>
+
+      <ExerciseManager />
     </ScreenShell>
   );
 }

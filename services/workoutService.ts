@@ -10,11 +10,12 @@ import {
 } from 'firebase/firestore';
 
 import { getDb, isFirebaseConfigured } from '@/services/firebase';
-import type { UserWorkoutData, WeeklySchedule, WorkoutLog, WorkoutPlan } from '@/types/workout';
+import type { Exercise, UserWorkoutData, WeeklySchedule, WorkoutLog, WorkoutPlan } from '@/types/workout';
 
-type SyncEntity = 'workoutPlans' | 'weeklySchedule' | 'workoutLogs';
+type SyncEntity = 'exercises' | 'workoutPlans' | 'weeklySchedule' | 'workoutLogs';
 
 type PendingWrite =
+  | { type: 'exercises'; userId: string; payload: Exercise[] }
   | { type: 'workoutPlans'; userId: string; payload: WorkoutPlan[] }
   | { type: 'weeklySchedule'; userId: string; payload: WeeklySchedule[] }
   | { type: 'workoutLogs'; userId: string; payload: WorkoutLog[] };
@@ -22,6 +23,7 @@ type PendingWrite =
 const STORAGE_PREFIX = '@gymapp/workouts';
 const CACHE_VERSION = 1;
 const cacheKeys = {
+  exercises: (userId: string) => `${STORAGE_PREFIX}/${userId}/exercises`,
   workoutPlans: (userId: string) => `${STORAGE_PREFIX}/${userId}/workoutPlans`,
   weeklySchedule: (userId: string) => `${STORAGE_PREFIX}/${userId}/weeklySchedule`,
   workoutLogs: (userId: string) => `${STORAGE_PREFIX}/${userId}/workoutLogs`,
@@ -30,13 +32,53 @@ const cacheKeys = {
 
 let isSyncing = false;
 let syncStarted = false;
+const memoryStorage = new Map<string, string>();
+let storageUnavailableLogged = false;
+
+function logStorageFallback(error: unknown) {
+  if (storageUnavailableLogged) {
+    return;
+  }
+
+  storageUnavailableLogged = true;
+  console.warn('AsyncStorage unavailable, using in-memory cache until native storage is ready.', error);
+}
+
+async function safeGetItem(key: string) {
+  try {
+    return await AsyncStorage.getItem(key);
+  } catch (error) {
+    logStorageFallback(error);
+    return memoryStorage.get(key) ?? null;
+  }
+}
+
+async function safeSetItem(key: string, value: string) {
+  memoryStorage.set(key, value);
+
+  try {
+    await AsyncStorage.setItem(key, value);
+  } catch (error) {
+    logStorageFallback(error);
+  }
+}
+
+async function safeRemoveItem(key: string) {
+  memoryStorage.delete(key);
+
+  try {
+    await AsyncStorage.removeItem(key);
+  } catch (error) {
+    logStorageFallback(error);
+  }
+}
 
 function getEntityCollectionPath(userId: string, entity: SyncEntity) {
   return `users/${userId}/${entity}`;
 }
 
 async function readCache<T>(key: string, fallback: T): Promise<T> {
-  const cached = await AsyncStorage.getItem(key);
+  const cached = await safeGetItem(key);
 
   if (!cached) {
     return fallback;
@@ -51,7 +93,7 @@ async function readCache<T>(key: string, fallback: T): Promise<T> {
 }
 
 async function writeCache<T>(key: string, data: T) {
-  await AsyncStorage.setItem(
+  await safeSetItem(
     key,
     JSON.stringify({
       version: CACHE_VERSION,
@@ -130,6 +172,9 @@ async function pushToRemote(write: PendingWrite) {
   }
 
   switch (write.type) {
+    case 'exercises':
+      await replaceCollection(write.userId, 'exercises', write.payload);
+      return;
     case 'workoutPlans':
       await replaceCollection(write.userId, 'workoutPlans', write.payload);
       return;
@@ -198,13 +243,15 @@ async function fetchRemoteCollection<T>(userId: string, entity: SyncEntity): Pro
 }
 
 async function fetchRemoteUserData(userId: string): Promise<UserWorkoutData> {
-  const [workoutPlans, weeklySchedule, workoutLogs] = await Promise.all([
+  const [exercises, workoutPlans, weeklySchedule, workoutLogs] = await Promise.all([
+    fetchRemoteCollection<Exercise>(userId, 'exercises'),
     fetchRemoteCollection<WorkoutPlan>(userId, 'workoutPlans'),
     fetchRemoteCollection<WeeklySchedule>(userId, 'weeklySchedule'),
     fetchRemoteCollection<WorkoutLog>(userId, 'workoutLogs'),
   ]);
 
   return {
+    exercises,
     workoutPlans,
     weeklySchedule,
     workoutLogs,
@@ -212,6 +259,11 @@ async function fetchRemoteUserData(userId: string): Promise<UserWorkoutData> {
 }
 
 export const workoutService = {
+  async saveExercises(userId: string, exercises: Exercise[]) {
+    await saveEntity(cacheKeys.exercises(userId), { type: 'exercises', userId, payload: exercises }, exercises);
+    return exercises;
+  },
+
   async saveWorkoutPlans(userId: string, workoutPlans: WorkoutPlan[]) {
     await saveEntity(cacheKeys.workoutPlans(userId), { type: 'workoutPlans', userId, payload: workoutPlans }, workoutPlans);
     return workoutPlans;
@@ -233,6 +285,7 @@ export const workoutService = {
 
   async fetchUserData(userId: string): Promise<UserWorkoutData> {
     const cachedData: UserWorkoutData = {
+      exercises: await readCache(cacheKeys.exercises(userId), []),
       workoutPlans: await readCache(cacheKeys.workoutPlans(userId), []),
       weeklySchedule: await readCache(cacheKeys.weeklySchedule(userId), []),
       workoutLogs: await readCache(cacheKeys.workoutLogs(userId), []),
@@ -246,6 +299,7 @@ export const workoutService = {
       const remoteData = await fetchRemoteUserData(userId);
 
       await Promise.all([
+        writeCache(cacheKeys.exercises(userId), remoteData.exercises),
         writeCache(cacheKeys.workoutPlans(userId), remoteData.workoutPlans),
         writeCache(cacheKeys.weeklySchedule(userId), remoteData.weeklySchedule),
         writeCache(cacheKeys.workoutLogs(userId), remoteData.workoutLogs),
@@ -263,9 +317,10 @@ export const workoutService = {
 
   async clearLocalCache(userId: string) {
     await Promise.all([
-      AsyncStorage.removeItem(cacheKeys.workoutPlans(userId)),
-      AsyncStorage.removeItem(cacheKeys.weeklySchedule(userId)),
-      AsyncStorage.removeItem(cacheKeys.workoutLogs(userId)),
+      safeRemoveItem(cacheKeys.exercises(userId)),
+      safeRemoveItem(cacheKeys.workoutPlans(userId)),
+      safeRemoveItem(cacheKeys.weeklySchedule(userId)),
+      safeRemoveItem(cacheKeys.workoutLogs(userId)),
     ]);
   },
 };
