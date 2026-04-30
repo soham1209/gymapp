@@ -18,23 +18,23 @@ export function StatChip({ label, value }: StatChipProps) {
 
 const styles = StyleSheet.create({
   container: {
+    backgroundColor: palette.surface,
     borderColor: palette.border,
-    borderWidth: 2,
+    borderRadius: 16,
+    borderWidth: 1,
     flex: 1,
     gap: 6,
-    minWidth: 96,
-    padding: 12,
+    minWidth: 110,
+    padding: 14,
   },
   value: {
     color: palette.text,
     fontSize: 18,
-    fontWeight: '900',
+    fontWeight: '700',
   },
   label: {
     color: palette.mutedText,
     fontSize: 12,
-    fontWeight: '700',
-    letterSpacing: 0.8,
-    textTransform: 'uppercase',
+    fontWeight: '500',
   },
 });

@@ -148,9 +148,7 @@ const styles = StyleSheet.create({
   statusText: {
     color: palette.mutedText,
     fontSize: 11,
-    fontWeight: '900',
-    letterSpacing: 1,
-    textTransform: 'uppercase',
+    fontWeight: '600',
   },
   card: {
     gap: 16,
@@ -158,16 +156,16 @@ const styles = StyleSheet.create({
   cardTitle: {
     color: palette.text,
     fontSize: 22,
-    fontWeight: '900',
-    textTransform: 'uppercase',
+    fontWeight: '700',
   },
   input: {
     backgroundColor: palette.background,
     borderColor: palette.border,
-    borderWidth: 2,
+    borderRadius: 14,
+    borderWidth: 1,
     color: palette.text,
     fontSize: 15,
-    fontWeight: '700',
+    fontWeight: '500',
     paddingHorizontal: 12,
     paddingVertical: 12,
   },
@@ -177,7 +175,8 @@ const styles = StyleSheet.create({
   selectorItem: {
     alignItems: 'center',
     borderColor: palette.border,
-    borderWidth: 2,
+    borderRadius: 14,
+    borderWidth: 1,
     flexDirection: 'row',
     gap: 12,
     justifyContent: 'space-between',
@@ -193,8 +192,7 @@ const styles = StyleSheet.create({
   selectorTitle: {
     color: palette.text,
     fontSize: 16,
-    fontWeight: '900',
-    textTransform: 'uppercase',
+    fontWeight: '700',
   },
   selectorTitleActive: {
     color: palette.inverse,
@@ -202,7 +200,7 @@ const styles = StyleSheet.create({
   selectorMeta: {
     color: palette.mutedText,
     fontSize: 12,
-    fontWeight: '700',
+    fontWeight: '500',
   },
   selectorMetaActive: {
     color: palette.inverse,
@@ -210,9 +208,7 @@ const styles = StyleSheet.create({
   selectorBadge: {
     color: palette.text,
     fontSize: 11,
-    fontWeight: '900',
-    letterSpacing: 0.8,
-    textTransform: 'uppercase',
+    fontWeight: '600',
   },
   selectorBadgeActive: {
     color: palette.inverse,
@@ -223,20 +219,20 @@ const styles = StyleSheet.create({
   previewTitle: {
     color: palette.text,
     fontSize: 16,
-    fontWeight: '900',
-    textTransform: 'uppercase',
+    fontWeight: '700',
   },
   emptyText: {
     color: palette.mutedText,
     fontSize: 14,
-    fontWeight: '600',
+    fontWeight: '400',
     lineHeight: 20,
   },
   previewRow: {
     alignItems: 'center',
     backgroundColor: palette.elevated,
     borderColor: palette.border,
-    borderWidth: 2,
+    borderRadius: 14,
+    borderWidth: 1,
     flexDirection: 'row',
     gap: 12,
     justifyContent: 'space-between',
@@ -249,13 +245,12 @@ const styles = StyleSheet.create({
   previewName: {
     color: palette.text,
     fontSize: 15,
-    fontWeight: '900',
-    textTransform: 'uppercase',
+    fontWeight: '700',
   },
   previewMeta: {
     color: palette.mutedText,
     fontSize: 12,
-    fontWeight: '700',
+    fontWeight: '500',
   },
   orderButtons: {
     flexDirection: 'row',
@@ -263,22 +258,22 @@ const styles = StyleSheet.create({
   },
   orderButton: {
     borderColor: palette.border,
-    borderWidth: 2,
+    borderRadius: 12,
+    borderWidth: 1,
     paddingHorizontal: 12,
     paddingVertical: 10,
   },
   orderButtonLabel: {
     color: palette.text,
     fontSize: 11,
-    fontWeight: '900',
-    letterSpacing: 0.8,
-    textTransform: 'uppercase',
+    fontWeight: '600',
   },
   saveButton: {
     alignItems: 'center',
     backgroundColor: palette.text,
     borderColor: palette.border,
-    borderWidth: 2,
+    borderRadius: 14,
+    borderWidth: 1,
     paddingVertical: 14,
   },
   saveButtonDisabled: {
@@ -287,8 +282,6 @@ const styles = StyleSheet.create({
   saveButtonLabel: {
     color: palette.inverse,
     fontSize: 12,
-    fontWeight: '900',
-    letterSpacing: 0.8,
-    textTransform: 'uppercase',
+    fontWeight: '700',
   },
 });

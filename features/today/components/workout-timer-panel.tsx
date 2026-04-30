@@ -140,9 +140,7 @@ const styles = StyleSheet.create({
   statusText: {
     color: palette.mutedText,
     fontSize: 11,
-    fontWeight: '900',
-    letterSpacing: 1,
-    textTransform: 'uppercase',
+    fontWeight: '600',
   },
   primaryCard: {
     gap: 16,
@@ -154,7 +152,8 @@ const styles = StyleSheet.create({
   timerBlock: {
     backgroundColor: palette.elevated,
     borderColor: palette.border,
-    borderWidth: 2,
+    borderRadius: 16,
+    borderWidth: 1,
     flex: 1,
     gap: 8,
     padding: 14,
@@ -162,14 +161,12 @@ const styles = StyleSheet.create({
   timerLabel: {
     color: palette.mutedText,
     fontSize: 12,
-    fontWeight: '900',
-    letterSpacing: 0.8,
-    textTransform: 'uppercase',
+    fontWeight: '600',
   },
   timerValue: {
     color: palette.text,
     fontSize: 34,
-    fontWeight: '900',
+    fontWeight: '700',
   },
   actionRow: {
     flexDirection: 'row',
@@ -179,7 +176,8 @@ const styles = StyleSheet.create({
   primaryButton: {
     backgroundColor: palette.text,
     borderColor: palette.border,
-    borderWidth: 2,
+    borderRadius: 14,
+    borderWidth: 1,
     paddingHorizontal: 16,
     paddingVertical: 12,
   },
@@ -189,22 +187,19 @@ const styles = StyleSheet.create({
   primaryButtonLabel: {
     color: palette.inverse,
     fontSize: 12,
-    fontWeight: '900',
-    letterSpacing: 0.8,
-    textTransform: 'uppercase',
+    fontWeight: '700',
   },
   secondaryButton: {
     borderColor: palette.border,
-    borderWidth: 2,
+    borderRadius: 14,
+    borderWidth: 1,
     paddingHorizontal: 16,
     paddingVertical: 12,
   },
   secondaryButtonLabel: {
     color: palette.text,
     fontSize: 12,
-    fontWeight: '900',
-    letterSpacing: 0.8,
-    textTransform: 'uppercase',
+    fontWeight: '600',
   },
   statsRow: {
     flexDirection: 'row',
@@ -217,8 +212,7 @@ const styles = StyleSheet.create({
   setsTitle: {
     color: palette.text,
     fontSize: 18,
-    fontWeight: '900',
-    textTransform: 'uppercase',
+    fontWeight: '700',
   },
   setsList: {
     gap: 10,
@@ -226,7 +220,8 @@ const styles = StyleSheet.create({
   setRow: {
     alignItems: 'center',
     borderColor: palette.border,
-    borderWidth: 2,
+    borderRadius: 14,
+    borderWidth: 1,
     flexDirection: 'row',
     justifyContent: 'space-between',
     padding: 12,
@@ -234,12 +229,11 @@ const styles = StyleSheet.create({
   setRowLabel: {
     color: palette.text,
     fontSize: 14,
-    fontWeight: '900',
-    textTransform: 'uppercase',
+    fontWeight: '600',
   },
   setRowValue: {
     color: palette.text,
     fontSize: 14,
-    fontWeight: '900',
+    fontWeight: '700',
   },
 });

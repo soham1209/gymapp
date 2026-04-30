@@ -1,20 +1,20 @@
 import type { Theme } from '@react-navigation/native';
 
 export const palette = {
-  background: '#050505',
-  surface: '#111111',
-  elevated: '#171717',
-  border: '#ffffff',
-  text: '#ffffff',
-  mutedText: '#b3b3b3',
-  accent: '#ffffff',
-  inverse: '#000000',
-  success: '#ffffff',
-  danger: '#ffffff',
+  background: '#f3f4f6',
+  surface: '#ffffff',
+  elevated: '#f8fafc',
+  border: '#e5e7eb',
+  text: '#1f2937',
+  mutedText: '#6b7280',
+  accent: '#8da3b8',
+  inverse: '#ffffff',
+  success: '#a7c4a0',
+  danger: '#d9a5a5',
 } as const;
 
-export const brutalTheme: Theme = {
-  dark: true,
+export const appTheme: Theme = {
+  dark: false,
   colors: {
     primary: palette.accent,
     background: palette.background,
@@ -26,29 +26,29 @@ export const brutalTheme: Theme = {
   fonts: {
     regular: {
       fontFamily: 'System',
-      fontWeight: '500',
+      fontWeight: '400',
     },
     medium: {
       fontFamily: 'System',
-      fontWeight: '700',
+      fontWeight: '500',
     },
     bold: {
       fontFamily: 'System',
-      fontWeight: '800',
+      fontWeight: '700',
     },
     heavy: {
       fontFamily: 'System',
-      fontWeight: '900',
+      fontWeight: '800',
     },
   },
 };
 
-export const brutalShadows = {
+export const appShadows = {
   block: {
-    shadowColor: '#ffffff',
-    shadowOffset: { width: 6, height: 6 },
-    shadowOpacity: 1,
-    shadowRadius: 0,
-    elevation: 0,
+    shadowColor: '#111827',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.08,
+    shadowRadius: 12,
+    elevation: 2,
   },
 } as const;

@@ -10,8 +10,7 @@ const styles = StyleSheet.create({
   text: {
     color: palette.text,
     fontSize: 22,
-    fontWeight: '900',
-    letterSpacing: 0.8,
-    textTransform: 'uppercase',
+    fontWeight: '700',
+    letterSpacing: -0.2,
   },
 });

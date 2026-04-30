@@ -243,9 +243,7 @@ const styles = StyleSheet.create({
   statusText: {
     color: palette.mutedText,
     fontSize: 11,
-    fontWeight: '900',
-    letterSpacing: 1,
-    textTransform: 'uppercase',
+    fontWeight: '600',
   },
   createCard: {
     gap: 14,
@@ -253,8 +251,7 @@ const styles = StyleSheet.create({
   cardTitle: {
     color: palette.text,
     fontSize: 20,
-    fontWeight: '900',
-    textTransform: 'uppercase',
+    fontWeight: '700',
   },
   form: {
     gap: 14,
@@ -262,10 +259,11 @@ const styles = StyleSheet.create({
   input: {
     backgroundColor: palette.background,
     borderColor: palette.border,
-    borderWidth: 2,
+    borderRadius: 14,
+    borderWidth: 1,
     color: palette.text,
     fontSize: 15,
-    fontWeight: '700',
+    fontWeight: '500',
     paddingHorizontal: 12,
     paddingVertical: 12,
   },
@@ -276,7 +274,8 @@ const styles = StyleSheet.create({
   },
   pill: {
     borderColor: palette.border,
-    borderWidth: 2,
+    borderRadius: 999,
+    borderWidth: 1,
     paddingHorizontal: 10,
     paddingVertical: 8,
   },
@@ -286,8 +285,7 @@ const styles = StyleSheet.create({
   pillLabel: {
     color: palette.text,
     fontSize: 12,
-    fontWeight: '800',
-    textTransform: 'uppercase',
+    fontWeight: '600',
   },
   pillLabelActive: {
     color: palette.inverse,
@@ -303,8 +301,7 @@ const styles = StyleSheet.create({
   metricLabel: {
     color: palette.mutedText,
     fontSize: 12,
-    fontWeight: '800',
-    textTransform: 'uppercase',
+    fontWeight: '600',
   },
   buttonRow: {
     flexDirection: 'row',
@@ -313,7 +310,8 @@ const styles = StyleSheet.create({
   primaryButton: {
     backgroundColor: palette.text,
     borderColor: palette.border,
-    borderWidth: 2,
+    borderRadius: 14,
+    borderWidth: 1,
     paddingHorizontal: 14,
     paddingVertical: 12,
   },
@@ -323,22 +321,19 @@ const styles = StyleSheet.create({
   primaryButtonLabel: {
     color: palette.inverse,
     fontSize: 12,
-    fontWeight: '900',
-    letterSpacing: 0.8,
-    textTransform: 'uppercase',
+    fontWeight: '700',
   },
   secondaryButton: {
     borderColor: palette.border,
-    borderWidth: 2,
+    borderRadius: 14,
+    borderWidth: 1,
     paddingHorizontal: 14,
     paddingVertical: 12,
   },
   secondaryButtonLabel: {
     color: palette.text,
     fontSize: 12,
-    fontWeight: '900',
-    letterSpacing: 0.8,
-    textTransform: 'uppercase',
+    fontWeight: '600',
   },
   list: {
     gap: 14,
@@ -359,15 +354,12 @@ const styles = StyleSheet.create({
   exerciseName: {
     color: palette.text,
     fontSize: 22,
-    fontWeight: '900',
-    textTransform: 'uppercase',
+    fontWeight: '700',
   },
   exerciseGroup: {
     color: palette.mutedText,
     fontSize: 12,
-    fontWeight: '900',
-    letterSpacing: 0.8,
-    textTransform: 'uppercase',
+    fontWeight: '600',
   },
   inlineButtons: {
     flexDirection: 'row',
@@ -376,16 +368,15 @@ const styles = StyleSheet.create({
   dangerButton: {
     backgroundColor: palette.text,
     borderColor: palette.border,
-    borderWidth: 2,
+    borderRadius: 14,
+    borderWidth: 1,
     paddingHorizontal: 14,
     paddingVertical: 12,
   },
   dangerButtonLabel: {
     color: palette.inverse,
     fontSize: 12,
-    fontWeight: '900',
-    letterSpacing: 0.8,
-    textTransform: 'uppercase',
+    fontWeight: '700',
   },
   statsRow: {
     flexDirection: 'row',
@@ -394,7 +385,8 @@ const styles = StyleSheet.create({
   statBlock: {
     backgroundColor: palette.elevated,
     borderColor: palette.border,
-    borderWidth: 2,
+    borderRadius: 14,
+    borderWidth: 1,
     flex: 1,
     gap: 6,
     padding: 12,
@@ -402,12 +394,11 @@ const styles = StyleSheet.create({
   statValue: {
     color: palette.text,
     fontSize: 18,
-    fontWeight: '900',
+    fontWeight: '700',
   },
   statLabel: {
     color: palette.mutedText,
     fontSize: 12,
-    fontWeight: '800',
-    textTransform: 'uppercase',
+    fontWeight: '600',
   },
 });

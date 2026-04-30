@@ -1,7 +1,7 @@
 import { PropsWithChildren } from 'react';
 import { StyleSheet, View, ViewProps } from 'react-native';
 
-import { brutalShadows, palette } from '@/utils/theme';
+import { appShadows, palette } from '@/utils/theme';
 
 type BrutalCardProps = PropsWithChildren<ViewProps>;
 
@@ -17,8 +17,9 @@ const styles = StyleSheet.create({
   card: {
     backgroundColor: palette.surface,
     borderColor: palette.border,
-    borderWidth: 2,
-    padding: 16,
-    ...brutalShadows.block,
+    borderRadius: 18,
+    borderWidth: 1,
+    padding: 18,
+    ...appShadows.block,
   },
 });

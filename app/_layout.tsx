@@ -5,7 +5,7 @@ import 'react-native-reanimated';
 import * as SystemUI from 'expo-system-ui';
 import { useEffect } from 'react';
 
-import { brutalTheme, palette } from '@/utils/theme';
+import { appTheme, palette } from '@/utils/theme';
 
 export default function RootLayout() {
   useEffect(() => {
@@ -13,12 +13,12 @@ export default function RootLayout() {
   }, []);
 
   return (
-    <ThemeProvider value={brutalTheme}>
+    <ThemeProvider value={appTheme}>
       <Stack>
         <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
         <Stack.Screen name="index" options={{ headerShown: false }} />
       </Stack>
-      <StatusBar style="light" />
+      <StatusBar style="dark" />
     </ThemeProvider>
   );
 }

@@ -8,22 +8,20 @@ export default function TabLayout() {
   return (
     <Tabs
       screenOptions={{
-        tabBarActiveTintColor: palette.inverse,
+        tabBarActiveTintColor: palette.text,
         tabBarInactiveTintColor: palette.mutedText,
         headerShown: false,
         tabBarStyle: {
-          backgroundColor: palette.text,
-          borderTopWidth: 2,
+          backgroundColor: palette.surface,
+          borderTopWidth: 1,
           borderTopColor: palette.border,
-          height: 72,
-          paddingBottom: 10,
+          height: 76,
+          paddingBottom: 12,
           paddingTop: 10,
         },
         tabBarLabelStyle: {
           fontSize: 11,
-          fontWeight: '900',
-          letterSpacing: 0.6,
-          textTransform: 'uppercase',
+          fontWeight: '600',
         },
         sceneStyle: {
           backgroundColor: palette.background,
