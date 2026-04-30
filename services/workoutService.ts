@@ -10,7 +10,14 @@ import {
 } from 'firebase/firestore';
 
 import { getDb, isFirebaseConfigured } from '@/services/firebase';
-import type { Exercise, UserWorkoutData, WeeklySchedule, WorkoutLog, WorkoutPlan } from '@/types/workout';
+import type {
+  Exercise,
+  UserWorkoutData,
+  WeeklySchedule,
+  WeeklyScheduleTemplate,
+  WorkoutLog,
+  WorkoutPlan,
+} from '@/types/workout';
 
 type SyncEntity = 'exercises' | 'workoutPlans' | 'weeklySchedule' | 'workoutLogs';
 
@@ -269,13 +276,17 @@ export const workoutService = {
     return workoutPlans;
   },
 
-  async saveWeeklySchedule(userId: string, weeklySchedule: WeeklySchedule[]) {
+  async saveWeeklySchedule(userId: string, weeklySchedule: WeeklyScheduleTemplate) {
     await saveEntity(
       cacheKeys.weeklySchedule(userId),
       { type: 'weeklySchedule', userId, payload: weeklySchedule },
       weeklySchedule,
     );
     return weeklySchedule;
+  },
+
+  async saveWeeklyTemplate(userId: string, weeklyTemplate: WeeklyScheduleTemplate) {
+    return this.saveWeeklySchedule(userId, weeklyTemplate);
   },
 
   async saveWorkoutLogs(userId: string, workoutLogs: WorkoutLog[]) {

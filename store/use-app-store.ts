@@ -1,7 +1,17 @@
 import { create } from 'zustand';
 
 import { workoutService } from '@/services/workoutService';
-import type { Exercise, ExerciseDraft, Weekday, WeeklySchedule, WorkoutPlan } from '@/types/workout';
+import type {
+  Exercise,
+  ExerciseDraft,
+  LoggedExercise,
+  LoggedSet,
+  TimerState,
+  Weekday,
+  WeeklySchedule,
+  WorkoutLog,
+  WorkoutPlan,
+} from '@/types/workout';
 
 type WorkoutBlock = {
   id: string;
@@ -15,6 +25,8 @@ type WeeklyStat = {
   label: string;
   value: string;
 };
+
+type AppTimerState = TimerState;
 
 const defaultExercises: Exercise[] = [
   {
@@ -114,21 +126,42 @@ type AppState = {
   exercises: Exercise[];
   workoutPlans: WorkoutPlan[];
   weeklySchedule: WeeklySchedule[];
+  workoutLogs: WorkoutLog[];
+  todayWorkoutLog: WorkoutLog | null;
   todayChecklist: Record<string, boolean>;
+  timer: AppTimerState;
   plannerReady: boolean;
   plannerStatus: 'idle' | 'loading' | 'saving' | 'error';
   exerciseStatus: 'idle' | 'saving' | 'error';
   workoutPlanStatus: 'idle' | 'saving' | 'error';
+  workoutLogStatus: 'idle' | 'saving' | 'error';
   toggleWorkoutBlock: (id: string) => void;
   toggleRecoveryMode: () => void;
   initializeWorkoutPlanner: () => Promise<void>;
   addExerciseToDay: (day: Weekday, exerciseId: Exercise['id']) => Promise<void>;
   addWorkoutPlanToDay: (day: Weekday, workoutPlanId: WorkoutPlan['id']) => Promise<void>;
+  removeScheduleItemFromDay: (day: Weekday, itemIndex: number) => Promise<void>;
+  clearDaySchedule: (day: Weekday) => Promise<void>;
   addExercise: (exercise: ExerciseDraft) => Promise<void>;
   updateExercise: (exerciseId: Exercise['id'], exercise: ExerciseDraft) => Promise<void>;
   deleteExercise: (exerciseId: Exercise['id']) => Promise<void>;
   createWorkoutPlan: (name: string, exerciseIds: Exercise['id'][]) => Promise<void>;
   toggleTodayExercise: (checklistId: string) => void;
+  tickTimer: () => void;
+  startWorkoutTimer: () => void;
+  pauseWorkoutTimer: () => void;
+  startRestTimer: (context: 'set' | 'exercise') => void;
+  stopRestTimer: () => void;
+  completeSet: () => void;
+  resetWorkoutSession: () => void;
+  addSetToExerciseLog: (exerciseId: Exercise['id']) => void;
+  updateExerciseSetField: (
+    exerciseId: Exercise['id'],
+    setNumber: number,
+    field: 'reps' | 'weight',
+    value: number,
+  ) => void;
+  saveTodayWorkoutLog: () => Promise<void>;
 };
 
 const initialBlocks: WorkoutBlock[] = [
@@ -144,6 +177,17 @@ const initialWeeklyStats: WeeklyStat[] = [
   { label: 'Sleep', value: '7.8 HRS' },
 ];
 
+const initialTimerState: AppTimerState = {
+  isWorkoutRunning: false,
+  isRestRunning: false,
+  workoutTime: 0,
+  restTime: 0,
+  totalWorkoutTime: 0,
+  currentSetTime: 0,
+  restContext: null,
+  setDurations: [],
+};
+
 function mergeWeeklySchedule(weeklySchedule: WeeklySchedule[]) {
   const scheduleMap = new Map(weeklySchedule.map((entry) => [entry.day, entry]));
   return weekdays.map((day) => scheduleMap.get(day) ?? { day, items: [] });
@@ -157,6 +201,25 @@ function getUpdatedSchedule(
   return weeklySchedule.map((entry) =>
     entry.day === day ? { ...entry, items: [...entry.items, newItem] } : entry,
   );
+}
+
+function removeScheduleItem(
+  weeklySchedule: WeeklySchedule[],
+  day: Weekday,
+  itemIndex: number,
+) {
+  return weeklySchedule.map((entry) =>
+    entry.day === day
+      ? {
+          ...entry,
+          items: entry.items.filter((_, index) => index !== itemIndex),
+        }
+      : entry,
+  );
+}
+
+function clearScheduleDay(weeklySchedule: WeeklySchedule[], day: Weekday) {
+  return weeklySchedule.map((entry) => (entry.day === day ? { ...entry, items: [] } : entry));
 }
 
 function createExerciseId(name: string) {
@@ -180,6 +243,32 @@ function syncPlansWithExercises(workoutPlans: WorkoutPlan[], exercises: Exercise
     .filter((plan) => plan.exercises.length > 0);
 }
 
+function getTodayDateKey() {
+  return new Date().toISOString().slice(0, 10);
+}
+
+function getCurrentWeekday() {
+  return weekdays[new Date().getDay() === 0 ? 6 : new Date().getDay() - 1];
+}
+
+function createWorkoutLogId() {
+  return `workout-log-${Date.now().toString(36)}`;
+}
+
+function createEmptyTodayWorkoutLog(): WorkoutLog {
+  return {
+    id: createWorkoutLogId(),
+    date: getTodayDateKey(),
+    day: getCurrentWeekday(),
+    exercises: [],
+  };
+}
+
+function mergeTodayWorkoutLog(logs: WorkoutLog[]) {
+  const todayDate = getTodayDateKey();
+  return logs.find((log) => log.date === todayDate) ?? createEmptyTodayWorkoutLog();
+}
+
 export const useAppStore = create<AppState>((set, get) => ({
   athleteName: 'Soham',
   streak: 8,
@@ -192,11 +281,15 @@ export const useAppStore = create<AppState>((set, get) => ({
   exercises: defaultExercises,
   workoutPlans: defaultWorkoutPlans,
   weeklySchedule: defaultWeeklySchedule,
+  workoutLogs: [],
+  todayWorkoutLog: createEmptyTodayWorkoutLog(),
   todayChecklist: {},
+  timer: initialTimerState,
   plannerReady: false,
   plannerStatus: 'idle',
   exerciseStatus: 'idle',
   workoutPlanStatus: 'idle',
+  workoutLogStatus: 'idle',
   toggleWorkoutBlock: (id) =>
     set((state) => {
       const workoutBlocks = state.workoutBlocks.map((block) =>
@@ -232,11 +325,15 @@ export const useAppStore = create<AppState>((set, get) => ({
       const weeklySchedule = mergeWeeklySchedule(
         userData.weeklySchedule.length > 0 ? userData.weeklySchedule : defaultWeeklySchedule,
       );
+      const workoutLogs = userData.workoutLogs;
+      const todayWorkoutLog = mergeTodayWorkoutLog(workoutLogs);
 
       set({
         exercises,
         workoutPlans,
         weeklySchedule,
+        workoutLogs,
+        todayWorkoutLog,
         plannerReady: true,
         plannerStatus: 'idle',
       });
@@ -280,6 +377,38 @@ export const useAppStore = create<AppState>((set, get) => ({
 
     try {
       await workoutService.saveWeeklySchedule(userId, updatedSchedule);
+      set({ plannerStatus: 'idle' });
+    } catch {
+      set({ plannerStatus: 'error' });
+    }
+  },
+  removeScheduleItemFromDay: async (day, itemIndex) => {
+    const { userId, weeklySchedule } = get();
+    const updatedSchedule = removeScheduleItem(weeklySchedule, day, itemIndex);
+
+    set({
+      weeklySchedule: updatedSchedule,
+      plannerStatus: 'saving',
+    });
+
+    try {
+      await workoutService.saveWeeklyTemplate(userId, updatedSchedule);
+      set({ plannerStatus: 'idle' });
+    } catch {
+      set({ plannerStatus: 'error' });
+    }
+  },
+  clearDaySchedule: async (day) => {
+    const { userId, weeklySchedule } = get();
+    const updatedSchedule = clearScheduleDay(weeklySchedule, day);
+
+    set({
+      weeklySchedule: updatedSchedule,
+      plannerStatus: 'saving',
+    });
+
+    try {
+      await workoutService.saveWeeklyTemplate(userId, updatedSchedule);
       set({ plannerStatus: 'idle' });
     } catch {
       set({ plannerStatus: 'error' });
@@ -397,4 +526,169 @@ export const useAppStore = create<AppState>((set, get) => ({
         [checklistId]: !state.todayChecklist[checklistId],
       },
     })),
+  tickTimer: () =>
+    set((state) => {
+      if (state.timer.isWorkoutRunning) {
+        return {
+          timer: {
+            ...state.timer,
+            workoutTime: state.timer.workoutTime + 1,
+            totalWorkoutTime: state.timer.totalWorkoutTime + 1,
+            currentSetTime: state.timer.currentSetTime + 1,
+          },
+        };
+      }
+
+      if (state.timer.isRestRunning) {
+        return {
+          timer: {
+            ...state.timer,
+            restTime: state.timer.restTime + 1,
+            totalWorkoutTime: state.timer.totalWorkoutTime + 1,
+          },
+        };
+      }
+
+      return state;
+    }),
+  startWorkoutTimer: () =>
+    set((state) => ({
+      timer: {
+        ...state.timer,
+        isWorkoutRunning: true,
+        isRestRunning: false,
+        restContext: null,
+        restTime: 0,
+      },
+    })),
+  pauseWorkoutTimer: () =>
+    set((state) => ({
+      timer: {
+        ...state.timer,
+        isWorkoutRunning: false,
+      },
+    })),
+  startRestTimer: (context) =>
+    set((state) => ({
+      timer: {
+        ...state.timer,
+        isWorkoutRunning: false,
+        isRestRunning: true,
+        restContext: context,
+        restTime: 0,
+      },
+    })),
+  stopRestTimer: () =>
+    set((state) => ({
+      timer: {
+        ...state.timer,
+        isRestRunning: false,
+        restContext: null,
+      },
+    })),
+  completeSet: () =>
+    set((state) => ({
+      timer: {
+        ...state.timer,
+        setDurations:
+          state.timer.currentSetTime > 0
+            ? [...state.timer.setDurations, state.timer.currentSetTime]
+            : state.timer.setDurations,
+        currentSetTime: 0,
+        workoutTime: 0,
+      },
+    })),
+  resetWorkoutSession: () =>
+    set({
+      timer: initialTimerState,
+    }),
+  addSetToExerciseLog: (exerciseId) =>
+    set((state) => {
+      const currentLog = state.todayWorkoutLog ?? createEmptyTodayWorkoutLog();
+      const existingExercise = currentLog.exercises.find((entry) => entry.exerciseId === exerciseId);
+      const nextSetNumber = existingExercise ? existingExercise.sets.length + 1 : 1;
+      const nextSet: LoggedSet = {
+        setNumber: nextSetNumber,
+        reps: 0,
+        weight: 0,
+        duration: {
+          workoutTime: state.timer.currentSetTime,
+          restTime: state.timer.restTime,
+        },
+      };
+
+      const exercises = existingExercise
+        ? currentLog.exercises.map((entry) =>
+            entry.exerciseId === exerciseId ? { ...entry, sets: [...entry.sets, nextSet] } : entry,
+          )
+        : [
+            ...currentLog.exercises,
+            {
+              exerciseId,
+              sets: [nextSet],
+            },
+          ];
+
+      return {
+        todayWorkoutLog: {
+          ...currentLog,
+          exercises,
+        },
+        timer: {
+          ...state.timer,
+          setDurations:
+            state.timer.currentSetTime > 0
+              ? [...state.timer.setDurations, state.timer.currentSetTime]
+              : state.timer.setDurations,
+          currentSetTime: 0,
+          workoutTime: 0,
+        },
+      };
+    }),
+  updateExerciseSetField: (exerciseId, setNumber, field, value) =>
+    set((state) => {
+      if (!state.todayWorkoutLog) {
+        return state;
+      }
+
+      return {
+        todayWorkoutLog: {
+          ...state.todayWorkoutLog,
+          exercises: state.todayWorkoutLog.exercises.map((entry) =>
+            entry.exerciseId === exerciseId
+              ? {
+                  ...entry,
+                  sets: entry.sets.map((setEntry) =>
+                    setEntry.setNumber === setNumber ? { ...setEntry, [field]: value } : setEntry,
+                  ),
+                }
+              : entry,
+          ),
+        },
+      };
+    }),
+  saveTodayWorkoutLog: async () => {
+    const { userId, workoutLogs, todayWorkoutLog } = get();
+
+    if (!todayWorkoutLog || todayWorkoutLog.exercises.length === 0) {
+      return;
+    }
+
+    const updatedLogs = [
+      ...workoutLogs.filter((log) => log.date !== todayWorkoutLog.date),
+      todayWorkoutLog,
+    ];
+
+    set({
+      workoutLogs: updatedLogs,
+      workoutLogStatus: 'saving',
+    });
+
+    try {
+      await workoutService.saveWorkoutLogs(userId, updatedLogs);
+      set({ workoutLogStatus: 'idle' });
+    } catch {
+      set({ workoutLogStatus: 'error' });
+    }
+  },
 }));

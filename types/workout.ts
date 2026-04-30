@@ -65,6 +65,8 @@ export interface WeeklySchedule {
   items: WeeklyScheduleItem[];
 }
 
+export type WeeklyScheduleTemplate = WeeklySchedule[];
+
 export interface LoggedSet {
   setNumber: number;
   reps: number;
@@ -87,6 +89,10 @@ export interface WorkoutLog {
 export interface TimerState extends DurationWindow {
   isWorkoutRunning: boolean;
   isRestRunning: boolean;
+  totalWorkoutTime: number;
+  currentSetTime: number;
+  restContext: 'set' | 'exercise' | null;
+  setDurations: number[];
 }
 
 export interface UserWorkoutData {
