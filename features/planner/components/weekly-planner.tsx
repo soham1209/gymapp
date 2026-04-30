@@ -1,4 +1,4 @@
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 
 import { BrutalCard } from '@/components/ui/brutal-card';
@@ -60,6 +60,7 @@ export function WeeklyPlanner() {
     addExerciseToDay,
     addWorkoutPlanToDay,
   } = useAppStore();
+  const [planPickerDay, setPlanPickerDay] = useState<Weekday | null>(null);
 
   useEffect(() => {
     void initializeWorkoutPlanner();
@@ -68,11 +69,6 @@ export function WeeklyPlanner() {
   const nextExerciseForDay = (day: Weekday) => {
     const dayEntry = weeklySchedule.find((entry) => entry.day === day);
     return exercises[dayEntry ? dayEntry.items.length % exercises.length : 0];
-  };
-
-  const nextPlanForDay = (day: Weekday) => {
-    const dayEntry = weeklySchedule.find((entry) => entry.day === day);
-    return workoutPlans[dayEntry ? dayEntry.items.length % workoutPlans.length : 0];
   };
 
   return (
@@ -103,7 +99,7 @@ export function WeeklyPlanner() {
               .filter(isResolvedScheduleItem);
 
             const nextExercise = nextExerciseForDay(dayEntry.day);
-            const nextPlan = nextPlanForDay(dayEntry.day);
+            const isPlanPickerOpen = planPickerDay === dayEntry.day;
 
             return (
               <BrutalCard key={dayEntry.day} style={styles.dayCard}>
@@ -124,11 +120,42 @@ export function WeeklyPlanner() {
                     <Text style={styles.actionButtonLabel}>+ Exercise</Text>
                   </Pressable>
                   <Pressable
-                    onPress={() => void addWorkoutPlanToDay(dayEntry.day, nextPlan.id)}
+                    onPress={() =>
+                      setPlanPickerDay((current) => (current === dayEntry.day ? null : dayEntry.day))
+                    }
                     style={styles.actionButton}>
                     <Text style={styles.actionButtonLabel}>+ Plan</Text>
                   </Pressable>
                 </View>
+
+                {isPlanPickerOpen ? (
+                  <View style={styles.planPicker}>
+                    <Text style={styles.planPickerTitle}>Choose a saved plan</Text>
+                    {workoutPlans.length === 0 ? (
+                      <Text style={styles.planPickerEmpty}>
+                        Build a workout plan above, then assign it here.
+                      </Text>
+                    ) : (
+                      workoutPlans.map((plan) => (
+                        <Pressable
+                          key={plan.id}
+                          style={styles.planPickerItem}
+                          onPress={() => {
+                            void addWorkoutPlanToDay(dayEntry.day, plan.id);
+                            setPlanPickerDay(null);
+                          }}>
+                          <View style={styles.planPickerTextWrap}>
+                            <Text style={styles.planPickerName}>{plan.name}</Text>
+                            <Text style={styles.planPickerMeta}>
+                              {plan.exercises.length} exercises
+                            </Text>
+                          </View>
+                          <Text style={styles.planPickerAction}>Assign</Text>
+                        </Pressable>
+                      ))
+                    )}
+                  </View>
+                ) : null}
 
                 <View style={styles.items}>
                   {resolvedItems.length === 0 ? (
@@ -248,6 +275,56 @@ const styles = StyleSheet.create({
   actionButtonLabel: {
     color: palette.inverse,
     fontSize: 12,
+    fontWeight: '900',
+    letterSpacing: 0.8,
+    textTransform: 'uppercase',
+  },
+  planPicker: {
+    borderColor: palette.border,
+    borderWidth: 2,
+    gap: 10,
+    padding: 12,
+  },
+  planPickerTitle: {
+    color: palette.text,
+    fontSize: 14,
+    fontWeight: '900',
+    textTransform: 'uppercase',
+  },
+  planPickerEmpty: {
+    color: palette.mutedText,
+    fontSize: 13,
+    fontWeight: '600',
+    lineHeight: 19,
+  },
+  planPickerItem: {
+    alignItems: 'center',
+    backgroundColor: palette.elevated,
+    borderColor: palette.border,
+    borderWidth: 2,
+    flexDirection: 'row',
+    gap: 12,
+    justifyContent: 'space-between',
+    padding: 12,
+  },
+  planPickerTextWrap: {
+    flex: 1,
+    gap: 4,
+  },
+  planPickerName: {
+    color: palette.text,
+    fontSize: 15,
+    fontWeight: '900',
+    textTransform: 'uppercase',
+  },
+  planPickerMeta: {
+    color: palette.mutedText,
+    fontSize: 12,
+    fontWeight: '700',
+  },
+  planPickerAction: {
+    color: palette.text,
+    fontSize: 11,
     fontWeight: '900',
     letterSpacing: 0.8,
     textTransform: 'uppercase',

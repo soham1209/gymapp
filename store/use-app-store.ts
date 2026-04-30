@@ -114,9 +114,11 @@ type AppState = {
   exercises: Exercise[];
   workoutPlans: WorkoutPlan[];
   weeklySchedule: WeeklySchedule[];
+  todayChecklist: Record<string, boolean>;
   plannerReady: boolean;
   plannerStatus: 'idle' | 'loading' | 'saving' | 'error';
   exerciseStatus: 'idle' | 'saving' | 'error';
+  workoutPlanStatus: 'idle' | 'saving' | 'error';
   toggleWorkoutBlock: (id: string) => void;
   toggleRecoveryMode: () => void;
   initializeWorkoutPlanner: () => Promise<void>;
@@ -125,6 +127,8 @@ type AppState = {
   addExercise: (exercise: ExerciseDraft) => Promise<void>;
   updateExercise: (exerciseId: Exercise['id'], exercise: ExerciseDraft) => Promise<void>;
   deleteExercise: (exerciseId: Exercise['id']) => Promise<void>;
+  createWorkoutPlan: (name: string, exerciseIds: Exercise['id'][]) => Promise<void>;
+  toggleTodayExercise: (checklistId: string) => void;
 };
 
 const initialBlocks: WorkoutBlock[] = [
@@ -159,6 +163,10 @@ function createExerciseId(name: string) {
   return `${name.toLowerCase().trim().replace(/[^a-z0-9]+/g, '-')}-${Date.now().toString(36)}`;
 }
 
+function createWorkoutPlanId(name: string) {
+  return `${name.toLowerCase().trim().replace(/[^a-z0-9]+/g, '-')}-${Date.now().toString(36)}`;
+}
+
 function syncPlansWithExercises(workoutPlans: WorkoutPlan[], exercises: Exercise[]) {
   const exerciseMap = new Map(exercises.map((exercise) => [exercise.id, exercise]));
 
@@ -184,9 +192,11 @@ export const useAppStore = create<AppState>((set, get) => ({
   exercises: defaultExercises,
   workoutPlans: defaultWorkoutPlans,
   weeklySchedule: defaultWeeklySchedule,
+  todayChecklist: {},
   plannerReady: false,
   plannerStatus: 'idle',
   exerciseStatus: 'idle',
+  workoutPlanStatus: 'idle',
   toggleWorkoutBlock: (id) =>
     set((state) => {
       const workoutBlocks = state.workoutBlocks.map((block) =>
@@ -351,4 +361,40 @@ export const useAppStore = create<AppState>((set, get) => ({
       set({ exerciseStatus: 'error' });
     }
   },
+  createWorkoutPlan: async (name, exerciseIds) => {
+    const { userId, exercises, workoutPlans } = get();
+    const selectedExercises = exerciseIds
+      .map((exerciseId) => exercises.find((exercise) => exercise.id === exerciseId))
+      .filter((exercise): exercise is Exercise => Boolean(exercise));
+
+    if (!name.trim() || selectedExercises.length === 0) {
+      return;
+    }
+
+    const nextWorkoutPlan: WorkoutPlan = {
+      id: createWorkoutPlanId(name),
+      name: name.trim(),
+      exercises: selectedExercises,
+    };
+    const updatedWorkoutPlans = [...workoutPlans, nextWorkoutPlan];
+
+    set({
+      workoutPlans: updatedWorkoutPlans,
+      workoutPlanStatus: 'saving',
+    });
+
+    try {
+      await workoutService.saveWorkoutPlans(userId, updatedWorkoutPlans);
+      set({ workoutPlanStatus: 'idle' });
+    } catch {
+      set({ workoutPlanStatus: 'error' });
+    }
+  },
+  toggleTodayExercise: (checklistId) =>
+    set((state) => ({
+      todayChecklist: {
+        ...state.todayChecklist,
+        [checklistId]: !state.todayChecklist[checklistId],
+      },
+    })),
 }));
